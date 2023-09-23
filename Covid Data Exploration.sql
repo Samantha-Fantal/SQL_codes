@@ -60,7 +60,6 @@ SELECT   Location
         ,Population
         ,Max(cast(total_cases as int)) as TotalCases
 		,Max(cast(total_deaths as int)) as TotalDeaths
-		,Round((Max(cast(new_deaths as int))/Sum(new_cases))*100,2) AS Death_Percentage 
 FROM CovidDeaths
 WHERE Continent is not null
 GROUP BY Location, Population
@@ -72,7 +71,6 @@ ORDER BY TotalDeaths desc
 -- Total reported cases and deaths (N and %) by continent as of 4/30/21
 
 SELECT Continent
-        ,Sum (population) as Continent_Pop
         ,Sum(new_cases) as TotalCases
 		,Sum(cast(new_deaths as int)) as TotalDeaths
 		,Round((Sum(cast(new_deaths as int))/Sum(new_cases))*100,2) AS Death_Percentage 
@@ -119,7 +117,7 @@ GROUP BY dea.Continent
         ,population
 
 
----Rolling Count of vaccinated people in the USA (Insert this data into a temp table)
+---Rolling Count of vaccinated people in the USA, CANADA and Mexico (Insert this data into a temp table)
 
 
 DROP TABLE if exists #PercentPopulationVaccinated
@@ -136,7 +134,7 @@ FROM CovidDeaths AS dea
 join CovidVaccinations AS vac
 on dea.location =vac.location
 and dea.date=vac.date
-where dea.location= 'United States'
+where dea.location in ('United States','Canada','Mexico')
 
 
 
@@ -152,8 +150,7 @@ SELECT   dea.Continent
 		,dea.Date
         ,Population
 		,New_vaccinations
-        ,SUM(CONVERT(int,new_vaccinations)) Over (Partition by dea.location order by dea.location, dea.date) as RollingVaccinationCount
-		,ROUND(SUM(CONVERT(int,new_vaccinations)) Over (Partition by dea.location order by dea.location, dea.date)/population*100,2) as RollingVaccinationPct
+        ,SUM(CONVERT(int,new_vaccinations)) Over (Partition by dea.location order by dea.location, dea.date) as RollingVaccinationCount		
 FROM CovidDeaths AS dea
 join CovidVaccinations AS vac
 on dea.location =vac.location
